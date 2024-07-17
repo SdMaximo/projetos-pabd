@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Incluir autores</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+      crossorigin="anonymous"
+    />
+    <link rel="stylesheet" href="/stylesheets/style.css" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script>
+  //     const result = '<%= JSON.stringify(resultado) %>';
+  // const unescapedResult = unescape(result);
+  // console.log(unescapedResult)
+  // console.log(JSON.parse(unescapedResult));
+  
+      const nationalities = {
+        '1': 'Brasileiro',
+        '2': 'Americano',
+        '3': 'Suiço'
+      }
+
+      $(document).ready(function () {
+        function getNacionalidade() {
+          $.ajax({
+            url: "/nacionalidades/listar",
+            type: "GET",
+            dataType: "json",
+            success: function (res) {
+              const selectedElement = $('#inputNacionalidade').children()[0]
+              const selectedValue = selectedElement.getAttribute('value')
+
+              selectedElement.innerHTML = nationalities[selectedValue]
+              const toIterate = res.resultado.filter(nationality => nationality.IdNacionalidade !== Number(selectedValue))
+
+              $.each(toIterate, function (key, value) {
+                $("#inputNacionalidade").append(
+                  "<option value = " +
+                    value.IdNacionalidade +
+                    ">" +
+                    value.NoNacionalidade +
+                    "</option>"
+              
+                );
+              });
+            },
+          });
+        }
+        
+
+
+        function setNacionalidade() {
+          $.ajax({
+            success: function (res) {
+              let nacionalidade = $('IdNacionalidade').val();
+              $("inputNacionalidade option").each(function(){
+                if($(this).val() == nacionalidade){
+                  $("#inputNacionalidade option[value='" + nacionalidade + "']").attr('selected', 'selected');
+                }
+              }
+              )
+            },
+          });
+        }
+
+
+        // function altera(IdAutor) {
+        //   $.ajax({
+        //     url: "/autores/edit" + IdAutor,
+        //     type: "PUT",
+        //     data: 'nome = ' + $('#inputAutores').val() + '&nacionalidade=' + ('#inputNacionalidade').val(),
+        //     success: function (res) {
+              
+        //         $(location).attr('href', '/autores/listar');
+              
+        //       const selectedElement = $('#inputNacionalidade').children()[0]
+        //       const selectedValue = selectedElement.getAttribute('value')
+
+        //       selectedElement.innerHTML = nationalities[selectedValue]
+        //       const toIterate = res.resultado.filter(nationality => nationality.IdNacionalidade !== Number(selectedValue))
+
+        //     }
+        //   });
+        //  }
+
+
+        getNacionalidade();
+        setNacionalidade();
+      });
+
+      function altera(IdAutor) {
+        const IdNacionalidade = $("#inputNacionalidade").find(':selected').val()
+        const IdAutor = $('#inputAutoresId').val()
+
+          $.ajax({
+            url: "/autores/edit/" + IdAutor,
+            type: "PUT",
+            data: 'nome = ' + $('#inputAutores').val() + '&nacionalidade=' + IdNacionalidade,
+            success: function (res) {
+              const location = document.createElement('a')
+                $(location).attr('href', '/autores/listar');
+                location.click()
+              
+              const selectedElement = $('#inputNacionalidade').children()[0]
+              const selectedValue = selectedElement.getAttribute('value')
+
+              selectedElement.innerHTML = nationalities[selectedValue]
+              const toIterate = res.resultado.filter(nationality => nationality.IdNacionalidade !== Number(selectedValue))
+
+            }
+          });
+         }
+
+    //     function altera(IdAutor) {
+    //       $.ajax({
+    //         url: "/autores/edit" + IdAutor,
+    //         type: "PUT",
+    //         data: 'nome = ' + $('#inputAutores').val() + '&nacionalidade=' + ('#inputNacionalidade').val(),
+    //         success: function (res) {
+              
+    //             $(location).attr('href', '/autores/listar');
+    //         }
+    //   });
+    // }
+    </script>
+  </head>
+  <body>
+    <% if (resultado.IdAutor) {%>
+      <input type = "hidden" id="IdNacionalidade" name = "IdNacionalidade" value = "<%= resultado.IdNacionalidade%>">
+      <h1>ALTERAR DADOS</h1>
+      <form method = "#" action = "/autores/edit/<%= resultado.IdAutor%>" class = "row g-3">
+    <%} else {%>
+     <h1>CADASTRO DE AUTORES</h1>
+     <form method="POST" action="/autores/add" class="row g-2">
+    <%}%>
+      <div class="col-md-6">
+        <label for="inputAutores" class="form-label">Autor</label>
+    <% if (resultado.IdAutor) {%>
+      <input type= "hidden" id = "inputAutoresId" value = "<%= resultado.IdAutor%>">
+      <input type ="text"class = "form-control" id = "inputAutores" name = "nome" placeholder = "nome" value = "<%=resultado.NoAutor%>">
+    <%} else {%>
+        <input type = "text" class = "form-control" id = "inputAutores" name = "nome" placeholder = "nome">
+    <%}%>
+
+      </div>
+      <div class="col-md-6">
+        <label for="inputNacionalidade" class="form-label">Nacionalidade</label>
+        <select id="inputNacionalidade" class="form-select" name="nacionalidade"
+        >
+        <% if (resultado.IdNacionalidade) {%>
+          <option selected value="<%=resultado.IdNacionalidade%>"><%=resultado.IdNacionalidade%></option>
+          <%}%>
+      </select>
+      </div>
+      <div class="col-12">
+        <% if (resultado.IdAutor) {%>
+          <button type= "button" onclick = "altera()" class="btn btn-primary">Salvar</button>
+          <%} else {%>
+          <button type="submit" class="btn btn-primary">Salvar</button>
+        <%}%>
+      </div>
+    </form>
+
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+      crossorigin="anonymous"
+    ></script>
+  </body>
+</html>
